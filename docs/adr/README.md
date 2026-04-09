@@ -20,3 +20,5 @@ ADRs capture what we decided, why we decided it, and what alternatives were cons
 ## ADR Index
 
 - [ADR-0001: Core Engine Language (Go)](ADR-0001-core-engine-language.md)
+- [ADR-0002-memory-schema-format.md](ADR-0002-memory-schema-format.md)
+- [ADR-0003-storage-baseline.md](ADR-0003-storage-baseline.md)
