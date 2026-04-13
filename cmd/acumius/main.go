@@ -3,8 +3,9 @@ package main
 import (
 	"context"
 	"errors"
-	"log"
+	"log/slog"
 	"net/http"
+	"os"
 	"os/signal"
 	"syscall"
 
@@ -13,6 +14,8 @@ import (
 )
 
 func main() {
+	logger := slog.With("service", "acumius")
+
 	cfg := config.Load()
 	server := &http.Server{
 		Addr:              cfg.HTTPAddr,
@@ -28,7 +31,7 @@ func main() {
 
 	errCh := make(chan error, 1)
 	go func() {
-		log.Printf("acumius: listening on %s", cfg.HTTPAddr)
+		logger.Info("server listening", "addr", cfg.HTTPAddr)
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			errCh <- err
 		}
@@ -37,10 +40,11 @@ func main() {
 
 	select {
 	case <-ctx.Done():
-		log.Print("acumius: shutdown signal received")
+		logger.Info("shutdown signal received")
 	case err := <-errCh:
 		if err != nil {
-			log.Fatalf("acumius: server failed: %v", err)
+			logger.Error("server failed", "error", err)
+			os.Exit(1)
 		}
 		return
 	}
@@ -49,8 +53,9 @@ func main() {
 	defer cancel()
 
 	if err := server.Shutdown(shutdownCtx); err != nil {
-		log.Fatalf("acumius: graceful shutdown failed: %v", err)
+		logger.Error("graceful shutdown failed", "error", err)
+		os.Exit(1)
 	}
 
-	log.Print("acumius: server stopped")
+	logger.Info("server stopped")
 }
